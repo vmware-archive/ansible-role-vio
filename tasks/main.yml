@@ -1,0 +1,26 @@
+---
+# Deploy VIO and create OpenStack Template file
+
+- name: deploy VIO OVA 
+  shell: ovftool 
+              --name='{{vio_name}}'
+              --acceptAllEulas 
+              --allowExtraConfig 
+              --noSSLVerify 
+              --diskMode=thin 
+              --datastore='{{vio_datastore }}'
+              --network='{{ vio_network }}'
+              '{{vio_ova}}' 
+              vi://{{ vcenter_user | urlencode }}:'{{ vcenter_password | urlencode }}'@'{{ vcenter_ip }}'/'{{ vio_datacenter }}'/host/'{{ vio_cluster }}'/
+
+- name: Start OpenStack Management Server
+  vsphere_guest:
+    vcenter_hostname: "{{vcenter_ip}}"
+    username: "{{vcenter_user}}"
+    password: "{{vcenter_password}}"
+    guest: management-server
+    state: powered_on
+
+- name: create json file
+  template: src=jsonTemplate.j2 dest=~/test.JSON
+

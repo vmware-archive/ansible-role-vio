@@ -1,0 +1,9 @@
+---
+# used to start the Management Service after VIO ova template is deployed
+  - vsphere_guest:
+      vcenter_hostname: "{{vcenter_host}}"
+      username: "{vcenter_{user}}"
+      password: "{{vcenter_password}}"
+      guest: management-server
+      state: powered_on
+

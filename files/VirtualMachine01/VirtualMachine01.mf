@@ -1,0 +1,2 @@
+SHA1(VirtualMachine01-disk1.vmdk)= e32195808cf6ee518d2dc75d2bc39e67c363a352
+SHA1(VirtualMachine01.ovf)= c2d6ebd9f57bfa230b5bb6437ff972a16e1c10fa
