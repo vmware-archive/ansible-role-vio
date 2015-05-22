@@ -1,16 +1,18 @@
 ---
 # Deploy VIO and create OpenStack Template file
+- name: unarchive ovftool.zip
+  unarchive: src="{{ ovftool_zip }}" dest=/tmp copy=yes
 
-- name: deploy VIO OVA 
-  shell: ovftool 
+- name: deploy VIO OVA
+  shell: /tmp/ovftool/ovftool
               --name='{{vio_name}}'
-              --acceptAllEulas 
-              --allowExtraConfig 
-              --noSSLVerify 
-              --diskMode=thin 
+              --acceptAllEulas
+              --allowExtraConfig
+              --noSSLVerify
+              --diskMode=thin
               --datastore='{{vio_datastore }}'
               --network='{{ vio_network }}'
-              '{{vio_ova}}' 
+              '{{vio_ova}}'
               vi://{{ vcenter_user | urlencode }}:'{{ vcenter_password | urlencode }}'@'{{ vcenter_ip }}'/'{{ vio_datacenter }}'/host/'{{ vio_cluster }}'/
 
 - name: Start OpenStack Management Server
