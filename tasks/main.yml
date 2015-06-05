@@ -5,21 +5,21 @@
 
 - name: deploy VIO OVA
   shell: /tmp/ovftool/ovftool
-              --name='{{vio_name}}'
+              --name='{{ vio_name }}'
               --acceptAllEulas
               --allowExtraConfig
               --noSSLVerify
               --diskMode=thin
-              --datastore='{{vio_datastore }}'
+              --datastore='{{ vio_datastore }}'
               --network='{{ vio_network }}'
-              '{{vio_ova}}'
-              vi://{{ vcenter_user | urlencode }}:'{{ vcenter_password | urlencode }}'@'{{ vcenter_ip }}'/'{{ vio_datacenter }}'/host/'{{ vio_cluster }}'/
+              '{{ vio_ova }}'
+              vi://{{ vcenter_user | urlencode }}:'{{ vcenter_password | urlencode }}'@'{{ vcenter_host }}'/'{{ datacenter_name }}'/host/'{{ vio_cluster_mgmt }}'/
 
 - name: Start OpenStack Management Server
   vsphere_guest:
-    vcenter_hostname: "{{vcenter_ip}}"
-    username: "{{vcenter_user}}"
-    password: "{{vcenter_password}}"
+    vcenter_hostname: "{{ vcenter_host }}"
+    username: "{{ vcenter_user }}"
+    password: "{{ vcenter_password }}"
     guest: management-server
     state: powered_on
 
