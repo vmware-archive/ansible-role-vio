@@ -24,5 +24,4 @@
     state: powered_on
 
 - name: create json file
-  template: src=jsonTemplate.j2 dest=~/test.JSON
-
+  template: src=jsonTemplate.j2 dest="{{ vio_config_json }}"
