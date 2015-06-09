@@ -1,7 +1,7 @@
 ---
 # Deploy VIO and create OpenStack Template file
 - name: unarchive ovftool.zip
-  unarchive: src="{{ ovftool_zip }}" dest=/tmp copy=yes
+#  unarchive: src="{{ ovftool_zip }}" dest=/tmp copy=yes
 
 - name: deploy VIO OVA
   shell: /tmp/ovftool/ovftool
