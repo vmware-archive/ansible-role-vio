@@ -1,1 +1,7 @@
-vio_config_json: "~/vio_config.json"
+vio_config_json: "~/supervio_config.json"
+
+vio_ova_location: "/var/www/html/downloads"
+vio_ova: "VMware-OpenStack-1.0.0.0-2567172_OVF10.ova"
+
+##### this is where the UI installs the ovftool this by default
+ovftool: /usr/local/bin/ovftool/ovftool

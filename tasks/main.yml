@@ -1,19 +1,23 @@
 ---
-# Deploy VIO and create OpenStack Template file
-- name: unarchive ovftool.zip
-#  unarchive: src="{{ ovftool_zip }}" dest=/tmp copy=yes
-
 - name: deploy VIO OVA
-  shell: /tmp/ovftool/ovftool
-              --name='{{ vio_name }}'
-              --acceptAllEulas
-              --allowExtraConfig
-              --noSSLVerify
-              --diskMode=thin
-              --datastore='{{ vio_datastore }}'
-              --network='{{ vio_network }}'
-              '{{ vio_ova }}'
-              vi://{{ vcenter_user | urlencode }}:'{{ vcenter_password | urlencode }}'@'{{ vcenter_host }}'/'{{ datacenter_name }}'/host/'{{ vio_cluster_mgmt }}'/
+  shell: >
+    {{ ovftool }}
+    '--name={{ vio_name }}'
+    --acceptAllEulas
+    --allowExtraConfig
+    --noSSLVerify
+    --diskMode=thin
+    '--datastore={{ vio_datastore }}'
+    '--network={{ vio_network }}'
+    '{{ vio_ova_location }}/{{ vio_ova }}'
+    'vi://{{ vcenter_user | urlencode }}:{{ vcenter_password | urlencode }}@{{ vcenter_host }}:443/{{ datacenter_name }}/host/{{ vio_cluster_mgmt }}'
+  tags:
+    - ova
+
+- name: create json file
+  template: src=config.json.j2 dest="{{ vio_config_json }}"
+  tags:
+    - config
 
 - name: Start OpenStack Management Server
   vsphere_guest:
@@ -22,6 +26,5 @@
     password: "{{ vcenter_password }}"
     guest: management-server
     state: powered_on
-
-- name: create json file
-  template: src=jsonTemplate.j2 dest="{{ vio_config_json }}"
+  tags:
+    - oms
