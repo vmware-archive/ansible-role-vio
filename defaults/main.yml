@@ -13,7 +13,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-vio_config_json: "~/supervio_config.json"
+vio_config_json: "~/vio_config.json"
 
 vio_ova_location: "/var/www/html/downloads"
 vio_ova: "VMware-OpenStack-1.0.0.0-2567172_OVF10.ova"

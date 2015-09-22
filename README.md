@@ -1,4 +1,4 @@
-# ansible-role-supervio
+# ansible-role-vio
 
 Ansible playbook to automate installing, upgrading and configuring VIO.
 
