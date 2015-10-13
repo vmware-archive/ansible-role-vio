@@ -1,0 +1,26 @@
+---
+- name: Deploy the VIO OMS appliance
+  command: >
+    {{ ovftool }}
+    --acceptAllEulas
+    --noSSLVerify
+    --skipManifestCheck
+    --X:waitForIp
+    --X:logFile=/tmp/deploy_vio_via_ovftool.log
+    --X:logLevel=verbose
+    "--vService:installation=com.vmware.vim.vsm:extension_vservice"
+    --diskMode=thin
+    --powerOn
+    "--datastore={{ '{{ vio_oms_datastore }}' }}"
+    "--network={{ '{{ vio_oms_network }}' }}"
+    --prop:ntpServer={{ vio_oms_ntp_server }}
+{% if vio_oms_networking_mode == "Static" %}
+    --prop:vami.ip0.management-server={{ vio_oms_ip_address }}
+    --prop:vami.netmask0.management-server={{ vio_oms_ip_subnet }}
+    --prop:vami.gateway.management-server={{ vio_oms_ip_gw }}
+    --prop:vami.DNS.management-server={{ vio_oms_dns_server }}
+{% endif %}
+    '{{ downloads_dir }}/{{ chaperone_vio_ova }}'
+    'vi://{{ vio_oms_vcenter_username | urlencode }}:{{ vio_oms_vcenter_pwd | urlencode }}@{{ vio_oms_vcenter_hostname }}:443/{{ vio_oms_datacenter_name }}/host/{{ vio_oms_cluster_name }}'
+  register: deploy_vio_ovf_result
+  ignore_errors: True
