@@ -14,32 +14,61 @@
 #  limitations under the License.
 #
 ---
-- name: deploy VIO OVA
+- name: Deploy VIO OVA
   shell: >
     {{ ovftool }}
-    '--name={{ vio_name }}'
     --acceptAllEulas
-    --allowExtraConfig
     --noSSLVerify
+    --skipManifestCheck
+    --X:waitForIp
+    --X:logFile=/tmp/deploy_vio_via_ovftool.log
+    --X:logFile={{ chaperone_log_dir }}/deploy_vio_via_ovftool.log
+    --X:logLevel=verbose
+    "--vService:installation=com.vmware.vim.vsm:extension_vservice"
     --diskMode=thin
-    '--datastore={{ vio_datastore }}'
-    '--network={{ vio_network }}'
+    --powerOn
+    "--datastore={{ '{{ vio_oms_datastore }}' }}"
+    "--network={{ '{{ vio_oms_network }}' }}"
+    --prop:viouser_passwd={{ viouser_pwd }}
+    --prop:ntpServer={{ vio_oms_ntp_server }}
+    --prop:vami.ip0.management-server={{ vio_oms_ip_address }}
+    --prop:vami.netmask0.management-server={{ vio_oms_ip_subnet }}
+    --prop:vami.gateway.management-server={{ vio_oms_ip_gw }}
+    --prop:vami.DNS.management-server={{ dns_server }}
+    --prop:vami.domain.management-server={{ dns_domain_name }}
+    --prop:vami.searchpath.management-server={{ dns_domain_name }}
+    --prop:syslogServer={{ syslog_server }}
+    --prop:syslogProtocol={{ vio_oms_syslog_protocol }}
+    --prop:syslogPort={{ vio_oms_syslog_port }}
     '{{ vio_ova_location }}/{{ vio_ova }}'
-    'vi://{{ vcenter_user | urlencode }}:{{ vcenter_password | urlencode }}@{{ vcenter_host }}:443/{{ datacenter_name }}/host/{{ vio_cluster_mgmt }}'
+    'vi://{{ vio_oms_vcenter_username | urlencode }}:{{ vio_oms_vcenter_pwd | urlencode }}@{{ vio_oms_vcenter_hostname }}:443/{{ vio_oms_datacenter_name }}/host/{{ vio_oms_cluster_name }}'
+  register: deploy_vio_ovf_result
+  ignore_errors: True
   tags:
-    - ova
+    - deploy_vio_ova
 
-- name: create json file
-  template: src=config.json.j2 dest="{{ vio_config_json }}"
+- name: Upgrade VIO 2.0 to 2.01 patch
+  include: vio_patch_upgrade.yml
+  when: vio_upgrade_status == '1'
+  tags:
+    - vio_upgrade
+
+- name: Restart OMS after upgrade
+  vsphere_guest:
+    vcenter_hostname: "{{ vio_oms_vcenter_hostname }}"
+    username: "{{ vio_oms_vcenter_username }}"
+    password: "{{ vio_oms_vcenter_pwd }}"
+    guest: management-server
+    state: restarted
+  tags:
+    - vio_upgrade_restart
+
+- name: Deploy and Configure VIO Cluster
+  include: vio_config.yml
   tags:
     - config
 
-- name: Start OpenStack Management Server
-  vsphere_guest:
-    vcenter_hostname: "{{ vcenter_host }}"
-    username: "{{ vcenter_user }}"
-    password: "{{ vcenter_password }}"
-    guest: management-server
-    state: powered_on
+- name: Validate Openstack
+  include: vio_validate_openstack.yml
   tags:
-    - oms
+    - validate_openstack

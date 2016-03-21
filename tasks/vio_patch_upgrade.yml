@@ -1,0 +1,51 @@
+#
+#  Copyright 2015 VMware, Inc.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+---
+- name: Get VIO 2.01 Patch file and put on the OMS
+  copy:
+    src: "{{ vio_ova_location }}/{{ vio_patch }}"
+    dest: "{{ vip_dest_path }}/{{ vio_patch }}"
+    owner: "{{ vio_oms_user }}"
+    group: "{{ vio_oms_grp }}"
+  register: copy_patch_file
+
+- name: Check Get VIO Patch is on the OMS
+  stat: path="{{ vip_dest_path }}/{{ vio_patch }}"
+  register: vio_upgrade_stat
+
+- name: Add the patch
+  shell: >
+    viopatch add -l {{ vip_dest_path }}/{{ vio_patch }}
+  when: vio_upgrade_stat.stat.exists
+  register: add_patch
+
+- name: Get Patch name
+  shell: >
+    viopatch list | awk '/{{ vio_patch_version }}/ {print $1}'
+  when: add_patch.rc == 0
+  register: patch_name
+
+- name: Get patch install status
+  shell: >
+    viopatch list | awk '/{{ vio_patch_version }}/ {print $4}'
+  when: add_patch.rc == 0
+  register: patch_status
+
+- name: Install patch
+  shell: >
+    viopatch install --patch {{ patch_name.stdout }} --version {{ vio_patch_version }}
+  when: patch_status.stdout == 'No' and add_patch.rc == 0
+

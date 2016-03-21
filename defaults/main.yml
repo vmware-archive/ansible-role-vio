@@ -13,10 +13,45 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-vio_config_json: "~/vio_config.json"
+chaperone_log_dir: "/tmp"
+vio_cluster_spec: "/tmp/vio_cluster_spec.json"
 
 vio_ova_location: "/var/www/html/downloads"
-vio_ova: "VMware-OpenStack-1.0.0.0-2567172_OVF10.ova"
+vio_ova: "VMware-OpenStack-2.0.0.0-3302254_OVF10.ova"
+
+### default image for demo project
+default_image_name: "ubuntu-14.04-server-amd64"
 
 ##### this is where the UI installs the ovftool this by default
 ovftool: /usr/local/bin/ovftool/ovftool
+
+##### vio upgrade vars
+vio_patch: "vio-patch-201_2.0.1.3309787_all.deb"
+vip_dest_path: "/tmp"
+vio_oms_user: 'viouser'
+vio_oms_grp: 'viogrp'
+vio_patch_version: '2.0.1.3309787'
+
+### templates
+dest_dir: "/tmp"
+templates_dir: "../templates"
+vio_heat_template_src: "{{ templates_dir }}/vio_heat.json.j2"
+vio_heat_template_dest: "{{ dest_dir }}/vio_heat.json"
+
+### IP addrs to validate
+vio_ip_addrs:
+  - "{{ dns_server }}"
+  - "{{ syslog_server }}"
+  - "{{ vio_management_openstack_api_network_subnet }}"
+  - "{{ vio_management_openstack_api_network_ip_end }}"
+  - "{{ vio_management_openstack_api_network_ip_start }}"
+  - "{{ vio_management_openstack_api_network_gateway }}"
+  - "{{ vio_management_network_subnet }}"
+  - "{{ vio_management_network_ip_end }}"
+  - "{{ vio_management_network_ip_start }}"
+  - "{{ vio_management_network_gateway }}"
+  - "{{ vio_loadbalancer_vip }}"
+  - "{{ vio_val_ext_net_gateway }}"
+  - "{{ vio_val_ext_net_cidr }}"
+  - "{{ vio_val_ext_net_pool_start }}"
+  - "{{ vio_val_ext_net_pool_end }}"
