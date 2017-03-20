@@ -1,2 +1,126 @@
+#
+#  Copyright 2015 VMware, Inc.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 ---
-# tasks file for vio
+- name: OMS vAPP
+  vio_oms_deploy:
+    hostname: "{{ vio_oms_vcenter_hostname }}"
+    username: "{{ vio_oms_vcenter_username }}"
+    password: "{{ vio_oms_vcenter_pwd }}"
+    validate_certs: "{{ vcenter_validate_certs }}"
+    vmname: "{{ oms_vm_name }}"
+    ovftool_path: "{{ ovf_tool_path }}"
+    path_to_ova: "{{ vio_ova_path }}"
+    ova_file: "{{ vio_ova }}"
+    datacenter: "{{ vio_oms_datacenter_name }}"
+    cluster: "{{ vio_oms_cluster_name }}"
+    disk_mode: "{{ oms_disk_mode }}"
+    datastore: "{{ vio_oms_datastore }}"
+    network: "{{ vio_oms_network }}"
+    viouser_password: "{{ viouser_pwd }}"
+    oms_hostname: "{{ oms_hostname }}"
+    oms_ip: "{{ vio_oms_ip_address }}"
+    oms_subnet: "{{ vio_oms_ip_subnet }}"
+    oms_gateway: "{{ vio_oms_ip_gw}}"
+    oms_dns_server_ip: "{{ oms_dns_list }}"
+    oms_search_path: "{{ dns_domain_name }}"
+    oms_ntp_server: "{{ ntp_server }}"
+    oms_syslog_server: "{{ syslog_server }}"
+    oms_syslog_protocol: "{{ vio_oms_syslog_protocol }}"
+    oms_syslog_port: "{{ vio_oms_syslog_port }}"
+    state: "{{ desired_state }}"
+  register: oms_deploy
+  tags:
+    - deploy_vio_ova
+
+- name: Get Vcenter VDS Moid
+  vcenter_query:
+    hostname: "{{ vio_oms_vcenter_hostname }}"
+    username: "{{ vio_oms_vcenter_username }}"
+    password: "{{ vio_oms_vcenter_pwd }}"
+    validate_certs: False
+    vcenter_object_name: "{{ vio_nsx_vds }}"
+    vcenter_vim_type: "vds"
+  register: vds_moid
+  tags:
+    - create_spec_file
+
+- name: Get Compute Cluster Moid
+  vcenter_query:
+    hostname: "{{ vio_oms_vcenter_hostname }}"
+    username: "{{ vio_oms_vcenter_username }}"
+    password: "{{ vio_oms_vcenter_pwd }}"
+    validate_certs: False
+    vcenter_object_name: "{{ vio_nova_cluster }}"
+    vcenter_vim_type: "cluster"
+  register: compute_cluster_moid
+  tags:
+    - create_spec_file
+
+- name: Get Edge Cluster Moid
+  vcenter_query:
+    hostname: "{{ vio_oms_vcenter_hostname }}"
+    username: "{{ vio_oms_vcenter_username }}"
+    password: "{{ vio_oms_vcenter_pwd }}"
+    validate_certs: False
+    vcenter_object_name: "{{ vio_nsx_edge_cluster }}"
+    vcenter_vim_type: "cluster"
+  register: edge_cluster_moid
+  tags:
+    - create_spec_file
+
+- name: Get Management Cluster Moid
+  vcenter_query:
+    hostname: "{{ vio_oms_vcenter_hostname }}"
+    username: "{{ vio_oms_vcenter_username }}"
+    password: "{{ vio_oms_vcenter_pwd }}"
+    validate_certs: False
+    vcenter_object_name: "{{ vio_management_cluster }}"
+    vcenter_vim_type: "cluster"
+  register: management_cluster_moid
+  tags:
+    - create_spec_file
+
+- name: Get Transport Zone Id
+  nsx_vds_id:
+    nsx_manager: "{{ vio_nsx_manager_ip }}"
+    nsx_manager_username: "{{ vio_nsx_manager_username }}"
+    nsx_manager_password: "{{ vio_nsx_manager_password }}"
+    nsx_api_version: "2.0"
+    vdnscope_name: "{{ vio_nsx_transport_zone }}"
+  register: vdnscope_id
+  tags:
+    - create_spec_file
+
+- name: Create Openstack VIO-Config configuration file
+  template:
+    src: "{{ vio_cluster_spec_src }}"
+    dest: "{{ vio_cluster_spec_dest }}"
+  with_items:
+    - { vdsmoid: "{{ vds_moid.object_id }}", vdnscopeid: "{{ vdnscope_id.object_id }}", edgeid: "{{ edge_cluster_moid.object_id }}", computeid: "{{ compute_cluster_moid.object_id }}", managementid: "{{ management_cluster_moid.object_id }}" }
+  tags:
+    - create_spec_file
+
+- name: Kick off VIO Deployment
+  vio_cluster_deploy:
+    oms_server: "{{ vio_oms_ip_address }}"
+    login: "{{ vio_oms_vcenter_username }}"
+    password: "{{ vio_oms_vcenter_pwd }}"
+    cluster_spec_json: "{{ vio_cluster_spec }}"
+    vio_mgmt_datastores: "{{ vio_mgmt_node_datastores }}"
+    vio_deployment_name: "{{ vio_cluster_name }}"
+    state: "{{ desired_state }}"
+  tags:
+    - vio_cluster
