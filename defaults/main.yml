@@ -21,13 +21,15 @@ vio_cluster_spec: "vio_cluster_spec_3_0.json.j2"
 vio_cluster_spec_src: "{{ templates_dir }}/{{ vio_cluster_spec }}"
 vio_cluster_spec_dest: "{{ destination_dir }}/vio_cluster_spec.josn"
 
+ovf_tool_path: /usr/local/bin/ovftool
+vcenter_validate_certs: False
+
+vio_ova_path: "/var/www/html/downloads"
+vio_ova: "VMware-OpenStack-3.0.0.0-4345506_OVF10.ova"
+oms_disk_mode: 'thin'
 oms_dns_list:
   - "{{ dns_server }}"
   - "{{ vio_oms_dns_server }}"
-oms_disk_mode: 'thin'
-vcenter_validate_certs: False
-vio_ova_path: "/var/www/html/downloads"
-vio_ova: "VMware-OpenStack-3.0.0.0-4345506_OVF10.ova"
 vio_mgmt_node_datastores:
   - "{{ vio_mgmt_node_ds_01 }}"
   - "{{ vio_mgmt_node_ds_02 }}"
