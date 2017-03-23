@@ -56,6 +56,7 @@
   register: vds_moid
   tags:
     - create_spec_file
+    - create_spec_file_singlevm
 
 - name: Get Compute Cluster Moid
   vcenter_query:
@@ -68,6 +69,7 @@
   register: compute_cluster_moid
   tags:
     - create_spec_file
+    - create_spec_file_singlevm
 
 - name: Get Edge Cluster Moid
   vcenter_query:
@@ -80,6 +82,7 @@
   register: edge_cluster_moid
   tags:
     - create_spec_file
+    - create_spec_file_singlevm
 
 - name: Get Management Cluster Moid
   vcenter_query:
@@ -92,6 +95,7 @@
   register: management_cluster_moid
   tags:
     - create_spec_file
+    - create_spec_file_singlevm
 
 - name: Get Transport Zone Id
   nsx_vds_id:
@@ -103,8 +107,9 @@
   register: vdnscope_id
   tags:
     - create_spec_file
+    - create_spec_file_singlevm
 
-- name: Create Openstack VIO-Config configuration file
+- name: Create Openstack VIO-Config configuration file HA Mode
   template:
     src: "{{ vio_cluster_spec_src }}"
     dest: "{{ vio_cluster_spec_dest }}"
@@ -112,6 +117,15 @@
     - { vdsmoid: "{{ vds_moid.object_id }}", vdnscopeid: "{{ vdnscope_id.object_id }}", edgeid: "{{ edge_cluster_moid.object_id }}", computeid: "{{ compute_cluster_moid.object_id }}", managementid: "{{ management_cluster_moid.object_id }}" }
   tags:
     - create_spec_file
+
+- name: Create Openstack VIO-Config configuration file Single VM Mode
+  template:
+    src: "{{ vio_cluster_spec_singlevm_src }}"
+    dest: "{{ vio_cluster_spec_singlevm_dest }}"
+  with_items:
+    - { vdsmoid: "{{ vds_moid.object_id }}", vdnscopeid: "{{ vdnscope_id.object_id }}", edgeid: "{{ edge_cluster_moid.object_id }}", computeid: "{{ compute_cluster_moid.object_id }}", managementid: "{{ management_cluster_moid.object_id }}" }
+  tags:
+    - create_spec_file_singlevm
 
 - name: Kick off VIO Deployment
   vio_cluster_deploy:
