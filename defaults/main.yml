@@ -19,7 +19,7 @@ templates_dir: "../templates"
 destination_dir: "/tmp"
 vio_cluster_spec: "vio_cluster_spec_3_0.json.j2"
 vio_cluster_spec_src: "{{ templates_dir }}/{{ vio_cluster_spec }}"
-vio_cluster_spec_dest: "{{ destination_dir }}/vio_cluster_spec.josn"
+vio_cluster_spec_dest: "{{ destination_dir }}/vio_cluster_spec.json"
 
 vio_cluster_spec_singlevm: "vio_cluster_spec_3_0_singlevm.json.j2"
 vio_cluster_spec_singlevm_src: "{{ templates_dir }}/{{ vio_cluster_spec_singlevm }}"
