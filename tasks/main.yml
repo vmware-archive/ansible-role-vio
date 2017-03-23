@@ -150,3 +150,14 @@
     state: "{{ desired_state }}"
   tags:
     - vio_cluster_singlevm
+
+- name: Unregister VIO Extentions
+  vio_unregister_extension:
+    hostname: "{{ vio_oms_vcenter_hostname }}"
+    username: "{{ vio_oms_vcenter_username }}"
+    password: "{{ vio_oms_vcenter_pwd }}"
+    validate_certs: "{{ vcenter_validate_certs }}"
+    extention_type: 'vio'
+    state: 'absent'
+  tags:
+    - unregister_vio_extentions
