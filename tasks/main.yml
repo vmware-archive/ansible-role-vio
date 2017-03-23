@@ -138,3 +138,15 @@
     state: "{{ desired_state }}"
   tags:
     - vio_cluster
+
+- name: Kick off VIO Deployment Single VM
+  vio_cluster_deploy:
+    oms_server: "{{ vio_oms_ip_address }}"
+    login: "{{ vio_oms_vcenter_username }}"
+    password: "{{ vio_oms_vcenter_pwd }}"
+    cluster_spec_json: "{{ vio_cluster_spec_singlevm_dest }}"
+    vio_mgmt_datastores: "{{ vio_mgmt_node_datastores }}"
+    vio_deployment_name: "{{ vio_cluster_name }}"
+    state: "{{ desired_state }}"
+  tags:
+    - vio_cluster_singlevm
