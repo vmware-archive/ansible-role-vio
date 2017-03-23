@@ -23,7 +23,7 @@ vio_cluster_spec_dest: "{{ destination_dir }}/vio_cluster_spec.josn"
 
 vio_cluster_spec_singlevm: "vio_cluster_spec_3_0_singlevm.json.j2"
 vio_cluster_spec_singlevm_src: "{{ templates_dir }}/{{ vio_cluster_spec_singlevm }}"
-vio_cluster_spec_singlevm_dest: "{{ destination_dir }}/vio_cluster_spec_singlevm.josn"
+vio_cluster_spec_singlevm_dest: "{{ destination_dir }}/vio_cluster_spec_singlevm.json"
 
 ovf_tool_path: /usr/local/bin/ovftool
 vcenter_validate_certs: False
