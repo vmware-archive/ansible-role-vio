@@ -134,6 +134,7 @@
   no_log: True
   tags:
     - post_deploy
+    - quick_val
 
 - name: Get Auth Token
   os_auth:
@@ -147,6 +148,7 @@
   register: adminauth
   tags:
     - post_deploy
+    - quick_val
 
 - name: Display Auth Token
   debug: msg="{{ adminauth.ansible_facts.auth_token }}"
@@ -192,3 +194,53 @@
   register: ext_net_id
   tags:
     - post_deploy
+
+#### Quick Validation ####
+## create project
+- name: Demo Project
+  os_projects:
+    auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v2.0'
+    username: "{{ authuser }}"
+    password: "{{ authpass }}"
+    tenant_name: 'admin'
+    new_project_name: "{{ demo_project_name }}"
+    state: "{{ desired_state }}"
+  register: demo_new_project
+  tags:
+    - quick_val
+
+## create user
+- name: Demo User
+  os_user:
+    auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v2.0'
+    username: "{{ authuser }}"
+    password: "{{ authpass }}"
+    tenant_name: 'admin'
+    project_name: "{{ demo_project_name }}"
+    new_user_name: "{{ demo_username }}"
+    new_user_pass: "{{ demo_user_password }}"
+    state: "{{ desired_state }}"
+  tags:
+    - quick_val
+## get token with new user
+- name: Get Auth Token New User
+  os_auth:
+    auth:
+      auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v2.0'
+      username: "{{ demo_username }}"
+      password: "{{ demo_user_password }}"
+      project_name: "{{ demo_project_name }}"
+    validate_certs: False
+  no_log: True
+  register: adminauth
+  tags:
+    - quick_val
+## create heat template
+
+## dpeloy stack in new project
+
+## delete stack
+
+## delete user
+
+## delete project
