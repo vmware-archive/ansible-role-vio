@@ -199,13 +199,14 @@
 ## create project
 - name: Demo Project
   os_projects:
-    auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v2.0'
+    auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v3'
     auth_user: "{{ authuser }}"
     auth_password: "{{ authpass }}"
     auth_project: 'admin'
     auth_project_domain: 'default'
     auth_user_domain: 'default'
     new_project_name: "{{ demo_project_name }}"
+    enabled: True
     state: "{{ desired_state }}"
   register: demo_new_project
   tags:
