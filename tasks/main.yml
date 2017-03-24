@@ -200,9 +200,11 @@
 - name: Demo Project
   os_projects:
     auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v2.0'
-    username: "{{ authuser }}"
-    password: "{{ authpass }}"
-    tenant_name: 'admin'
+    auth_user: "{{ authuser }}"
+    auth_password: "{{ authpass }}"
+    auth_project: 'admin'
+    auth_project_domain: 'default'
+    auth_user_domain: 'default'
     new_project_name: "{{ demo_project_name }}"
     state: "{{ desired_state }}"
   register: demo_new_project
