@@ -1,0 +1,328 @@
+{
+	"files": {},
+	"disable_rollback": true,
+	"stack_name": "{{ item.stack_name }}",
+	"template": {
+		"heat_template_version": "2013-05-23",
+		"description": "A simple Heat template",
+		"resources": {
+			"web_network_01": {
+				"type": "OS::Neutron::Net",
+				"properties": {
+					"admin_state_up": true,
+					"name": "web-network-01"
+				}
+			},
+			"web_subnet_01": {
+				"type": "OS::Neutron::Subnet",
+				"properties": {
+					"name": "web-subnet-01",
+					"cidr": "172.16.10.0/24",
+					"dns_nameservers": [
+						"{{ item.dns_name_server }}"
+					],
+					"enable_dhcp": true,
+					"gateway_ip": "172.16.10.1",
+					"network_id": {
+						"get_resource": "web_network_01"
+					}
+				}
+			},
+			"app_network_01": {
+				"type": "OS::Neutron::Net",
+				"properties": {
+					"admin_state_up": true,
+					"name": "app-network-01"
+				}
+			},
+			"app_subnet_01": {
+				"type": "OS::Neutron::Subnet",
+				"properties": {
+					"name": "app-subnet-01",
+					"cidr": "172.16.20.0/24",
+					"dns_nameservers": [
+						"{{ item.dns_name_server }}"
+					],
+					"enable_dhcp": true,
+					"gateway_ip": "172.16.20.1",
+					"network_id": {
+						"get_resource": "app_network_01"
+					}
+				}
+			},
+			"db_network_01": {
+				"type": "OS::Neutron::Net",
+				"properties": {
+					"admin_state_up": true,
+					"name": "db-network-01"
+				}
+			},
+			"db_subnet_01": {
+				"type": "OS::Neutron::Subnet",
+				"properties": {
+					"name": "db-subnet-01",
+					"cidr": "172.16.30.0/24",
+					"dns_nameservers": [
+						"{{ item.dns_name_server }}"
+					],
+					"enable_dhcp": true,
+					"gateway_ip": "172.16.30.1",
+					"network_id": {
+						"get_resource": "db_network_01"
+					}
+				}
+			},
+			"heat_router_01": {
+				"type": "OS::Neutron::Router",
+				"properties": {
+					"admin_state_up": true,
+					"name": "heat-router-01",
+					"value_specs": {
+						"router_type": "exclusive"
+					}
+				}
+			},
+			"heat_router_01_gw": {
+				"type": "OS::Neutron::RouterGateway",
+				"properties": {
+					"network_id": "{{ item.external_network_id }}",
+					"router_id": {
+						"get_resource": "heat_router_01"
+					}
+				}
+			},
+			"heat_router_int0": {
+				"type": "OS::Neutron::RouterInterface",
+				"properties": {
+					"router_id": {
+						"get_resource": "heat_router_01"
+					},
+					"subnet_id": {
+						"get_resource": "web_subnet_01"
+					}
+				}
+			},
+			"heat_router_int1": {
+				"type": "OS::Neutron::RouterInterface",
+				"properties": {
+					"router_id": {
+						"get_resource": "heat_router_01"
+					},
+					"subnet_id": {
+						"get_resource": "app_subnet_01"
+					}
+				}
+			},
+			"heat_router_int2": {
+				"type": "OS::Neutron::RouterInterface",
+				"properties": {
+					"router_id": {
+						"get_resource": "heat_router_01"
+					},
+					"subnet_id": {
+						"get_resource": "db_subnet_01"
+					}
+				}
+			},
+			"db_security_group": {
+				"type": "OS::Neutron::SecurityGroup",
+				"properties": {
+					"description": "Allow sql traffic from web tier",
+					"name": "db-security-group",
+					"rules": [{
+					    "remote_mode": "remote_group_id",
+						"remote_group_id": { "get_resource": "app_security_group" },
+						"protocol": "tcp",
+						"ethertype": "IPv4",
+						"port_range_min": 22,
+						"port_range_max": 22
+					}]
+				}
+			},
+			"web_security_group": {
+				"type": "OS::Neutron::SecurityGroup",
+				"properties": {
+					"description": "Allow web and ssh traffic from anywhere",
+					"name": "web-security-group",
+					"rules": [{
+						"remote_ip_prefix": "0.0.0.0/0",
+						"protocol": "tcp",
+						"port_range_min": 80,
+						"port_range_max": 80
+					}, {
+						"remote_ip_prefix": "0.0.0.0/0",
+						"protocol": "tcp",
+						"port_range_min": 22,
+						"port_range_max": 22
+					}]
+				}
+			},
+			"app_security_group": {
+				"type": "OS::Neutron::SecurityGroup",
+				"properties": {
+					"description": "Allow app traffic from web tier",
+					"name": "app-security-group",
+					"rules": [{
+   					    "remote_mode": "remote_group_id",
+						"remote_group_id": { "get_resource": "web_security_group" },
+						"protocol": "tcp",
+						"ethertype": "IPv4",
+						"port_range_min": 22,
+						"port_range_max": 22
+					}]
+				}
+			},
+			"web-svr-01_port0": {
+				"type": "OS::Neutron::Port",
+				"properties": {
+					"admin_state_up": true,
+					"network_id": {
+						"get_resource": "web_network_01"
+					},
+					"security_groups": [{
+						"get_resource": "web_security_group"
+					}]
+				}
+			},
+			"web-svr-01_floating_ip": {
+				"type": "OS::Neutron::FloatingIP",
+				"properties": {
+					"floating_network_id": "{{ item.external_network_id }}",
+					"port_id": {
+						"get_resource": "web-svr-01_port0"
+					}
+				}
+			},
+			"web-svr-02_port0": {
+				"type": "OS::Neutron::Port",
+				"properties": {
+					"admin_state_up": true,
+					"network_id": {
+						"get_resource": "web_network_01"
+					},
+					"security_groups": [{
+						"get_resource": "web_security_group"
+					}]
+				}
+			},
+			"web-svr-02_floating_ip": {
+				"type": "OS::Neutron::FloatingIP",
+				"properties": {
+					"floating_network_id": "{{ item.external_network_id }}",
+					"port_id": {
+						"get_resource": "web-svr-02_port0"
+					}
+				}
+			},
+			"app-svr-01_port0": {
+				"type": "OS::Neutron::Port",
+				"properties": {
+					"admin_state_up": true,
+					"network_id": {
+						"get_resource": "app_network_01"
+					},
+					"security_groups": [{
+						"get_resource": "app_security_group"
+					}]
+				}
+			},
+			"db-svr-01_port0": {
+				"type": "OS::Neutron::Port",
+				"properties": {
+					"admin_state_up": true,
+					"network_id": {
+						"get_resource": "db_network_01"
+					},
+					"security_groups": [{
+						"get_resource": "db_security_group"
+					}]
+				}
+			},
+			"db-svr-01": {
+				"type": "OS::Nova::Server",
+				"properties": {
+					"name": "db-instance-01",
+					"image": "{{ item.image_id }}",
+					"flavor": "m1.small",
+					"networks": [{
+						"port": {
+							"get_resource": "db-svr-01_port0"
+						}
+					}]
+				}
+			},
+			"app-svr-01": {
+				"type": "OS::Nova::Server",
+				"depends_on": "db-svr-01",
+				"properties": {
+					"name": "app-instance-01",
+					"image": "{{ item.image_id }}",
+					"flavor": "m1.small",
+					"networks": [{
+						"port": {
+							"get_resource": "app-svr-01_port0"
+						}
+					}]
+				}
+			},
+			"web-svr-01": {
+				"type": "OS::Nova::Server",
+				"depends_on": "app-svr-01",
+				"properties": {
+					"name": "web-instance-01",
+					"image": "{{ item.image_id }}",
+					"flavor": "m1.small",
+					"networks": [{
+						"port": {
+							"get_resource": "web-svr-01_port0"
+						}
+					}],
+                    "user_data_format": "RAW",
+                    "user_data": {
+                      "str_replace": {
+                        "template": "#!/bin/bash\n\nif [ ! -f /var/log/user_data.log ]; then\n  touch /var/log/user_data.log\nfi\n\nfail_script() {\n  local fail_message=\"$1\"\n  local fail_code=\"$2\"\n  local log_file=/var/log/user_data.log\n  local now=$(date +\"%m-%d-%Y-%T\")\n\n  if [ -z \"${fail_message}\" ]; then\n    echo \"$now - Generic script failure.\" >> $log_file\n  else\n    echo \"$now - ERROR: $fail_message\" >> $log_file\n  fi\n\n  if [ -z $fail_code ]; then\n    fail_code=1\n  fi\n\n  exit $fail_code\n}\n\ncreate_fs () {\n  mkfs -t ext4 $1\n\n  if [[ $? -ne 0 ]]; then\n    fail_script \"Failed to make filesystem on $1\" 1\n  fi\n\n}\n\nmake_dir_and_mount () {\n  local partition=\"$1\"\n  local directory=\"$2\"\n\n  mkdir \"$directory\"\n\n  if [ $? -eq 0 ]; then\n    mount $partition $directory\n  else\n    fail_script \"Failed to create directory $directory\" 1\n  fi\n\n}\n\ntouch_file () {\n  local filename=\"$1\"\n  touch $filename\n\n  if [ $? -eq 0 ]; then\n    echo \"Temp file Testing this is a test to write data to disk\" > \"$filename\"\n  else\n    fail_script \"Failed to create file $filename\" 1\n  fi\n}\n\ncreate_part () {\nsed -e 's/\\s*\\([\\+0-9a-zA-Z]*\\).*/\\1/' << EOF | /sbin/fdisk $mnt_point ${TGTDEV}\n  o # clear the in memory partition table\n  n # new partition\n  p # primary partition\n  1 # partition number 1\n  # default - start at beginning of disk\n  # default - start at ending of disk\n  w # write the partition table\n  q # and we're done\nEOF\n}\n\nscan_scsi() {\n  for i in /sys/class/scsi_host/*;\n  do\n    echo \"- - -\" > $i/scan\n  done\n  partprobe\n}\n\nwait_for_part () {\n  COUNTER=0\n  while [ $COUNTER -lt 10 ]; do\n    disk_present=$(lshw -C disk | awk '/sdb/ {print $3}')\n    if [ -z \"$disk_present\" ]; then\n      echo \"`date +%m-%d-%Y-%T` - Waiting for partition to be present scanning\" >> /var/log/user_data.log\n      scan_scsi\n      sleep 30\n    elif [ -n \"$disk_present\" ]; then\n      echo \"`date +%m-%d-%Y-%T` - Found partition sdb in proc partitions\" >> /var/log/user_data.log\n      break\n    elif [ $COUNTER -gt 15 ]; then\n      fail_script \"Failed waiting for sdb\" 1\n    fi\n    let COUNTER=COUNTER+1\n  done\n}\n\nfilename=$tempfilename\nmount_point=$mnt_point\npart_num=\"1\"\ndirectory=$mnt_dir\npartition=$mount_point$part_num\n\nwait_for_part\ncreate_part || fail_script \"Failed to create partition\" 1\ncreate_fs $partition || fail_script \"Failed to create File system\" 1\nmake_dir_and_mount $partition $directory || fail_script \"Failed to mkdir and mount\" 1\ntouch_file $directory/$filename || fail_script \"Failed to touch file\" 1\n",
+                        "params": {
+                          "$tempfilename": "temp_file",
+                          "$mnt_point": "/dev/sdb",
+                          "$mnt_dir": "/mnt/volumes"
+                        }
+                      }
+                    }
+				}
+			},
+			"web-svr-02": {
+				"type": "OS::Nova::Server",
+				"depends_on": "app-svr-01",
+				"properties": {
+					"name": "web-instance-02",
+					"image": "{{ item.image_id }}",
+					"flavor": "m1.small",
+					"networks": [{
+						"port": {
+							"get_resource": "web-svr-02_port0"
+						}
+					}]
+				}
+			},
+     		"cinder_volume": {
+		      "type": "OS::Cinder::Volume",
+		      "properties": {
+		        "size": "5",
+		        "availability_zone": "nova"
+		      }
+		    },
+		    "volume_attachment": {
+		      "type": "OS::Cinder::VolumeAttachment",
+		      "properties": {
+		        "volume_id": {
+		          "get_resource": "cinder_volume"
+		        },
+		        "instance_uuid": {
+		          "get_resource": "web-svr-01"
+		        },
+		        "mountpoint": "/dev/sdb"
+		      }
+		    }
+		}
+	}
+}
