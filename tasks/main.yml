@@ -149,7 +149,7 @@
     - post_deploy
 
 - name: Display Auth Token
-  debug: var=adminauth
+  debug: msg="{{ adminauth.ansible_facts.auth_token }}"
   tags:
     - post_deploy
 
