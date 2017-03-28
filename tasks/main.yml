@@ -205,7 +205,7 @@
     auth_project: 'admin'
     auth_project_domain: 'default'
     auth_user_domain: 'default'
-    new_project_name: "{{ demo_project_name }}"
+    project_name: "{{ demo_project_name }}"
     enabled: True
     state: "{{ desired_state }}"
   register: demo_new_project
@@ -213,33 +213,114 @@
     - quick_val
 
 ## create user
-- name: Demo User
+- name: Create Demo User
   os_user:
-    auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v2.0'
-    username: "{{ authuser }}"
-    password: "{{ authpass }}"
-    tenant_name: 'admin'
-    project_name: "{{ demo_project_name }}"
-    new_user_name: "{{ demo_username }}"
-    new_user_pass: "{{ demo_user_password }}"
+    auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v3'
+    auth_user: "{{ authuser }}"
+    auth_password: "{{ authpass }}"
+    auth_project: 'admin'
+    auth_project_domain: 'default'
+    auth_user_domain: 'default'
+    user_name: "{{ demo_username }}"
+    user_password: "{{ demo_user_password }}"
+    default_project: "{{ demo_project_name }}"
+    domain: 'default'
+    roles:
+      - '_member_'
+      - 'heat_stack_user'
     state: "{{ desired_state }}"
   tags:
     - quick_val
+
+# delete user
+- name: Demo User Delete User
+  os_user:
+    auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v3'
+    auth_user: "{{ authuser }}"
+    auth_password: "{{ authpass }}"
+    auth_project: 'admin'
+    auth_project_domain: 'default'
+    auth_user_domain: 'default'
+    user_name: "{{ demo_username }}"
+    user_password: "{{ demo_user_password }}"
+    default_project: "{{ demo_project_name }}"
+    domain: 'default'
+    roles:
+      - '_member_'
+      - 'heat_stack_user'
+    state: 'absent'
+
 ## get token with new user
-- name: Get Auth Token New User
+- name: Get Toke for new user
   os_auth:
     auth:
-      auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v2.0'
+      auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
       username: "{{ demo_username }}"
       password: "{{ demo_user_password }}"
       project_name: "{{ demo_project_name }}"
     validate_certs: False
-  no_log: True
-  register: adminauth
+  register: user_token
   tags:
     - quick_val
-## create heat template
 
+## get external_network_id
+- name: Get Provider Network ID
+  vio_provider_network:
+    auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
+    username: "{{ authuser }}"
+    password: "{{ authpass }}"
+    tenant_name: 'admin'
+    state: "{{ desired_state }}"
+    network:
+      name: "{{ vio_val_ext_net_name }}"
+      admin_state_up: True
+      port_security_enabled: True
+      provider_network_type: "{{ vio_val_extnet_net_type }}"
+      provider_physical_network: "{{ ext_net_pg_moid.object_id }}"
+      router_external: True
+      shared: False
+    subnet:
+      name: "{{ vio_val_ext_net_name }}_subnet"
+      enable_dhcp: False
+      gateway_ip: "{{ vio_val_ext_net_gateway }}"
+      ip_version: 4
+      cidr: "{{ vio_val_ext_net_cidr }}"
+      allocation_pools:
+        - start: "{{ vio_val_ext_net_pool_start }}"
+          end: "{{ vio_val_ext_net_pool_end }}"
+  register: ext_net_id
+  tags:
+    - quick_val
+
+- name: debug ext id
+  debug: var=ext_net_id
+  tags: quick_val
+
+## get image id for heat template
+- name: Get Image ID for default Ubuntu Image
+  os_image_facts:
+    auth:
+      auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v2.0'
+      username: "{{ authuser }}"
+      password: "{{ authpass }}"
+      project_name: 'admin'
+    validate_certs: False
+    image: "{{ default_image_name | default('ubuntu-14.04-server-amd64') }}"
+  no_log: True
+  tags:
+    - quick_val
+
+## create heat template
+- name: Create Heat template
+  template:
+    src: "{{ quick_val_heat_template_src }}"
+    dest: "{{ quick_val_heat_template_dest }}"
+  with_items:
+    - { stack_name: "{{ heat_stack_name }}",
+        external_network_id: "{{ ext_net_id.net_id }}",
+        image_id: "{{ openstack_image.id }}", }
+  tags:
+    - quick_val
 ## dpeloy stack in new project
 
 ## delete stack
@@ -247,3 +328,13 @@
 ## delete user
 
 ## delete project
+- name: Unregister VIO Extentions
+  vio_unregister_extension:
+    hostname: "{{ vio_oms_vcenter_hostname }}"
+    username: "{{ vio_oms_vcenter_username }}"
+    password: "{{ vio_oms_vcenter_pwd }}"
+    validate_certs: "{{ vcenter_validate_certs }}"
+    extention_type: 'vio'
+    state: 'absent'
+  tags:
+    - unregister_vio_extentions
