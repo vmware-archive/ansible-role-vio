@@ -110,7 +110,11 @@
     src: "{{ vio_cluster_spec_src }}"
     dest: "{{ vio_cluster_spec_dest }}"
   with_items:
-    - { vdsmoid: "{{ vds_moid.object_id }}", vdnscopeid: "{{ vdnscope_id.object_id }}", edgeid: "{{ edge_cluster_moid.object_id }}", computeid: "{{ compute_cluster_moid.object_id }}", managementid: "{{ management_cluster_moid.object_id }}" }
+    - { vdsmoid: "{{ vds_moid.object_id }}",
+        vdnscopeid: "{{ vdnscope_id.object_id }}",
+        edgeid: "{{ edge_cluster_moid.object_id }}",
+        computeid: "{{ compute_cluster_moid.object_id }}",
+        managementid: "{{ management_cluster_moid.object_id }}" }
   tags:
     - create_spec_file
 
@@ -154,6 +158,7 @@
   debug: msg="{{ adminauth.ansible_facts.auth_token }}"
   tags:
     - post_deploy
+    - quick_val
 
 - name: Get Portgroup MOID
   vcenter_query:
@@ -166,6 +171,7 @@
   register: ext_net_pg_moid
   tags:
     - post_deploy
+    - quick_val
 
 - name: Provider Network
   vio_provider_network:
@@ -232,25 +238,7 @@
   tags:
     - quick_val
 
-# delete user
-- name: Demo User Delete User
-  os_user:
-    auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v3'
-    auth_user: "{{ authuser }}"
-    auth_password: "{{ authpass }}"
-    auth_project: 'admin'
-    auth_project_domain: 'default'
-    auth_user_domain: 'default'
-    user_name: "{{ demo_username }}"
-    user_password: "{{ demo_user_password }}"
-    default_project: "{{ demo_project_name }}"
-    domain: 'default'
-    roles:
-      - '_member_'
-      - 'heat_stack_user'
-    state: 'absent'
-
-## get token with new user
+## get token with new user #####
 - name: Get Toke for new user
   os_auth:
     auth:
@@ -260,6 +248,11 @@
       project_name: "{{ demo_project_name }}"
     validate_certs: False
   register: user_token
+  tags:
+    - quick_val
+
+- name: debug user token
+  debug: msg="{{ user_token }}"
   tags:
     - quick_val
 
@@ -289,12 +282,10 @@
         - start: "{{ vio_val_ext_net_pool_start }}"
           end: "{{ vio_val_ext_net_pool_end }}"
   register: ext_net_id
-  tags:
-    - quick_val
+
 
 - name: debug ext id
   debug: var=ext_net_id
-  tags: quick_val
 
 ## get image id for heat template
 - name: Get Image ID for default Ubuntu Image
@@ -307,8 +298,6 @@
     validate_certs: False
     image: "{{ default_image_name | default('ubuntu-14.04-server-amd64') }}"
   no_log: True
-  tags:
-    - quick_val
 
 ## create heat template
 - name: Create Heat template
@@ -319,15 +308,66 @@
     - { stack_name: "{{ heat_stack_name }}",
         external_network_id: "{{ ext_net_id.net_id }}",
         image_id: "{{ openstack_image.id }}", }
-  tags:
-    - quick_val
+
+## check if stack already present
+- name: Check Heat stack present
+  vio_check_heat_stack:
+    auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
+    username: "{{ authuser }}"
+    password: "{{ authpass }}"
+    tenant_name: "{{ demo_project_name }}"
+    heat_stack_name: "{{ heat_stack_name }}"
+  register:
+
 ## dpeloy stack in new project
-
+- name: REST POST to deploy Heat stack into CEE Project
+  uri:
+    url: "https://{{ vio_loadbalancer_vip }}:8004/v1/{{ item.item.project_id }}/stacks"
+    method: POST
+    HEADER_Content-Type: "application/json"
+    HEADER_X-Auth-Token: "{{ item.ansible_facts.auth_token }}"
+    body: "{{ lookup('file', quick_val_heat_template_dest) }}"
+    body_format: json
+    validate_certs: no
+    return_content: yes
+    status_code: 201
+  register:
+  when: item.item.project_name == "{{ test_iteration }}_{{ lbaas_bindings_name_base }}_{{ vio_val_project_name_cee }}" and not test_lbaas_bindings_stack_present_cee.present
+  with_items:
+    - "{{ test_lbaas_bindings_tenantauth.results }}"
+  tags:
+    - test_lbaas_bindings
 ## delete stack
-
+- name: Delete Heat Stacks
+  vio_heat_stack_status:
+    auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
+    username: "{{ projectuser }}"
+    password: "{{ projectpass }}"
+    project_name: "{{ item }}"
+  register: heat_stack_results_destructo_status
+  with_items:
+    - "{{ lbaas_bindings_openstack_projects }}"
+  tags:
+    - test_lbaas_bindings_delete
 ## delete user
-
+- name: Demo User Delete User
+  os_user:
+    auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v3'
+    auth_user: "{{ authuser }}"
+    auth_password: "{{ authpass }}"
+    auth_project: 'admin'
+    auth_project_domain: 'default'
+    auth_user_domain: 'default'
+    user_name: "{{ demo_username }}"
+    user_password: "{{ demo_user_password }}"
+    default_project: "{{ demo_project_name }}"
+    domain: 'default'
+    roles:
+      - '_member_'
+      - 'heat_stack_user'
+    state: 'absent'
 ## delete project
+
 - name: Unregister VIO Extentions
   vio_unregister_extension:
     hostname: "{{ vio_oms_vcenter_hostname }}"
@@ -338,3 +378,18 @@
     state: 'absent'
   tags:
     - unregister_vio_extentions
+
+- name: Stat template files for clean up
+  stat: path="{{ item }}"
+  register: clean_up
+  with_items:
+    - "{{ quick_val_heat_template_dest }}"
+    - "{{ vio_cluster_spec_dest }}"
+
+- name: Clean up created files
+  file:
+    path: "{{ item }}"
+    state: 'absent'
+  when: item.state.exists
+  with_items:
+    - "{{ clean_up.results }}"

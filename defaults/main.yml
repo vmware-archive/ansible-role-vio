@@ -33,7 +33,7 @@ ovf_tool_path: /usr/local/bin/ovftool
 vcenter_validate_certs: False
 
 vio_ova_path: "/var/www/html/downloads"
-vio_ova: "VMware-OpenStack-3.1.0.0-5065461_OVF10.ova"
+vio_ova: "VMware-OpenStack-3.0.0.0-4345506_OVF10.ova"
 oms_disk_mode: 'thin'
 oms_dns_list:
   - "{{ dns_server }}"
