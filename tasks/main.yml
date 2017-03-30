@@ -287,9 +287,8 @@
         - start: "{{ vio_val_ext_net_pool_start }}"
           end: "{{ vio_val_ext_net_pool_end }}"
   register: ext_net_id
-
-- name: debug ext id
-  debug: var=ext_net_id
+  tags:
+    - quick_val
 
 ## get image id for heat template
 - name: Get Image ID for default Ubuntu Image
@@ -302,6 +301,8 @@
     validate_certs: False
     image: "{{ default_image_name | default('ubuntu-14.04-server-amd64') }}"
   no_log: True
+  tags:
+    - quick_val
 
 ## create heat template
 - name: Create Heat template
@@ -312,6 +313,8 @@
     - { stack_name: "{{ heat_stack_name }}",
         external_network_id: "{{ ext_net_id.net_id }}",
         image_id: "{{ openstack_image.id }}", }
+  tags:
+    - quick_val
 
 ## check if stack already present
 - name: Check Heat stack present
