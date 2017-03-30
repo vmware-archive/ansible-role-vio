@@ -333,6 +333,11 @@
   tags:
     - quick_val
 
+- name: Check Heat Stack
+  debug: msg="Heat Stack Present --> {{ check_heat.present }}"
+  tags:
+    - quick_val
+
 ## dpeloy stack in new project
 - name: Heat Stack
   uri:
