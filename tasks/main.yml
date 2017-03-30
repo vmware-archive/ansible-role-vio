@@ -253,11 +253,6 @@
   tags:
     - quick_val
 
-- name: debug user token
-  debug: msg="{{ user_token }}"
-  tags:
-    - quick_val
-
 - name: Get Provider Network ID
   vio_provider_network:
     auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
@@ -325,9 +320,9 @@
 - name: Check Heat stack
   os_check_heat:
     auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
-    username: "{{ demo_username }}"
-    password: "{{ demo_user_password }}"
-    tenant_name: "{{ demo_project_name }}"
+    username: "{{ authuser }}"
+    password: "{{ authpass }}"
+    tenant_name: "admin"
     heat_stack_name: "{{ heat_stack_name }}"
   register: check_heat
   tags:
