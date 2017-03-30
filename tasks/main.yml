@@ -340,18 +340,17 @@
     method: POST
     HEADER_Content-Type: "application/json"
     HEADER_X-Auth-Token: "{{ item.ansible_facts.auth_token }}"
-    body: "{{ lookup('file', lbaas_bindings_dest_dev) }}"
+    body: "{{ lookup('file', quick_val_heat_template_dest) }}"
     body_format: json
     validate_certs: no
     return_content: yes
     status_code: 201
-  register: test_lbaas_bindings_heat_stack_results_dev
+  register: heat_stack_results
   when: not check_heat.present
   with_items:
     - "{{ user_token }}"
   tags:
     - quick_val
-
 
 ## delete stack
 
