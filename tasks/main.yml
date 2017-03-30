@@ -304,6 +304,10 @@
   tags:
     - quick_val
 
+- name: Image ID
+  debug: msg="Ubuntu Image ID --> {{ openstack_image.id }}"
+  tags:
+    - quick_val
 ## create heat template
 - name: Create Heat template
   template:
@@ -312,7 +316,8 @@
   with_items:
     - { stack_name: "{{ heat_stack_name }}",
         external_network_id: "{{ ext_net_id.net_id }}",
-        image_id: "{{ openstack_image.id }}", }
+        image_id: "{{ openstack_image.id }}",
+        dns_name_server: "{{ dns_server }}" }
   tags:
     - quick_val
 
