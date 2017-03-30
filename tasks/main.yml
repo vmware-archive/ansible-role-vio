@@ -236,7 +236,7 @@
     domain: 'default'
     roles:
       - '_member_'
-      - 'heat_stack_user'
+      - 'heat_stack_owner'
     state: "{{ desired_state }}"
   tags:
     - quick_val
