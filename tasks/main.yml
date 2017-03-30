@@ -354,7 +354,8 @@
   when: not check_heat.present
   with_items:
     - "{{ user_token.results }}"
-
+  tags:
+    - quick_val
 
 
 ## delete stack
