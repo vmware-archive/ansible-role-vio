@@ -235,8 +235,7 @@
     default_project: "{{ demo_project_name }}"
     domain: 'default'
     roles:
-      - '_member_'
-      - 'heat_stack_owner'
+      - 'admin'
     state: "{{ desired_state }}"
   tags:
     - quick_val
@@ -330,6 +329,13 @@
 
 - name: Check Heat Stack
   debug: msg="Heat Stack Present --> {{ check_heat.present }}"
+  tags:
+    - quick_val
+
+- name: User Token
+  debug: msg="User Token --> {{ item.ansible_facts.auth_token}}"
+  with_items:
+    - "{{ user_token }}"
   tags:
     - quick_val
 
