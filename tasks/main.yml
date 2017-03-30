@@ -348,7 +348,7 @@
   register: test_lbaas_bindings_heat_stack_results_dev
   when: not check_heat.present
   with_items:
-    - "{{ user_token.results }}"
+    - "{{ user_token }}"
   tags:
     - quick_val
 
