@@ -325,14 +325,31 @@
 - name: Check Heat stack
   os_check_heat:
     auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
-    username: "{{ authuser }}"
-    password: "{{ authpass }}"
+    username: "{{ demo_username }}"
+    password: "{{ demo_user_password }}"
     tenant_name: "{{ demo_project_name }}"
     heat_stack_name: "{{ heat_stack_name }}"
   register: check_heat
   tags:
     - quick_val
+
 ## dpeloy stack in new project
+- name: Heat Stack
+  uri:
+    url: "https://{{ vio_loadbalancer_vip }}:8004/v1/{{ item.item.project_id }}/stacks"
+    method: POST
+    HEADER_Content-Type: "application/json"
+    HEADER_X-Auth-Token: "{{ item.ansible_facts.auth_token }}"
+    body: "{{ lookup('file', lbaas_bindings_dest_dev) }}"
+    body_format: json
+    validate_certs: no
+    return_content: yes
+    status_code: 201
+  register: test_lbaas_bindings_heat_stack_results_dev
+  when: not check_heat.present
+  with_items:
+    - "{{ user_token.results }}"
+
 
 
 ## delete stack
