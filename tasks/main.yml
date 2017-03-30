@@ -202,7 +202,6 @@
     - post_deploy
 
 #### Quick Validation ####
-## create project
 - name: Demo Project
   os_projects:
     auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v3'
@@ -223,8 +222,7 @@
   tags:
     - quick_val
 
-## create user
-- name: Create Demo User
+- name: Demo User
   os_user:
     auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v3'
     auth_user: "{{ authuser }}"
@@ -243,8 +241,7 @@
   tags:
     - quick_val
 
-## get token with new user #####
-- name: Get Toke for new user
+- name: Get Toke for user
   os_auth:
     auth:
       auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
@@ -261,7 +258,6 @@
   tags:
     - quick_val
 
-## get external_network_id
 - name: Get Provider Network ID
   vio_provider_network:
     auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
@@ -290,7 +286,11 @@
   tags:
     - quick_val
 
-## get image id for heat template
+- name: Provider Network ID
+  debug: msg="Provider Network ID --> {{ ext_net_id.net_id }}"
+  tags:
+    - quick_val
+
 - name: Get Image ID for default Ubuntu Image
   os_image_facts:
     auth:
@@ -308,7 +308,7 @@
   debug: msg="Ubuntu Image ID --> {{ openstack_image.id }}"
   tags:
     - quick_val
-## create heat template
+
 - name: Create Heat template
   template:
     src: "{{ quick_val_heat_template_src }}"
@@ -322,7 +322,7 @@
     - quick_val
 
 ## check if stack already present
-- name: Check Heat stack present
+- name: Check Heat stack
   os_check_heat:
     auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
     username: "{{ authuser }}"
@@ -330,7 +330,8 @@
     tenant_name: "{{ demo_project_name }}"
     heat_stack_name: "{{ heat_stack_name }}"
   register: check_heat
-
+  tags:
+    - quick_val
 ## dpeloy stack in new project
 
 
