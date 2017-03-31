@@ -139,6 +139,7 @@
   tags:
     - post_deploy
     - quick_val
+    - quick_val_delete
 
 - name: Get Auth Token
   os_auth:
@@ -153,6 +154,7 @@
   tags:
     - post_deploy
     - quick_val
+    - quick_val_delete
 
 - name: Display Auth Token
   debug: msg="{{ adminauth.ansible_facts.auth_token }}"
