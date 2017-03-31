@@ -359,6 +359,14 @@
     - quick_val
 
 ## delete stack
+- name: Delete Heat Stack
+  os_heat_status:
+    auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
+    username: "{{ demo_username }}"
+    password: "{{ demo_user_password }}"
+    project_name: "{{ demo_project_name }}"
+  tags:
+    - quick_val_delete
 
 - name: Unregister VIO Extentions
   vio_unregister_extension:
