@@ -428,7 +428,7 @@
   file:
     path: "{{ item }}"
     state: 'absent'
-  when: item.state.exists
+  when: item.stat.exists
   with_items:
     - "{{ clean_up.results }}"
   tags:
