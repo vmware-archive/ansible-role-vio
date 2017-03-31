@@ -358,13 +358,77 @@
   tags:
     - quick_val
 
-## delete stack
+- name: Check Heat stack
+  os_check_heat:
+    auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
+    username: "{{ authuser }}"
+    password: "{{ authpass }}"
+    tenant_name: "admin"
+    heat_stack_name: "{{ heat_stack_name }}"
+  register: check_heat_del
+  tags:
+    - quick_val
+
 - name: Delete Heat Stack
   os_heat_status:
     auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
     username: "{{ demo_username }}"
     password: "{{ demo_user_password }}"
     project_name: "{{ demo_project_name }}"
+  when: check_heat_del.present
+  tags:
+    - quick_val_delete
+
+## delete user
+- name: Demo User
+  os_user:
+    auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v3'
+    auth_user: "{{ authuser }}"
+    auth_password: "{{ authpass }}"
+    auth_project: 'admin'
+    auth_project_domain: 'default'
+    auth_user_domain: 'default'
+    user_name: "{{ demo_username }}"
+    user_password: "{{ demo_user_password }}"
+    default_project: "{{ demo_project_name }}"
+    domain: 'default'
+    roles:
+      - 'admin'
+    state: 'absent'
+  tags:
+    - quick_val_delete
+
+- name: Demo Project
+  os_projects:
+    auth_url: 'https://{{ vio_loadbalancer_vip }}:5000/v3'
+    auth_user: "{{ authuser }}"
+    auth_password: "{{ authpass }}"
+    auth_project: 'admin'
+    auth_project_domain: 'default'
+    auth_user_domain: 'default'
+    project_name: "{{ demo_project_name }}"
+    enabled: True
+    state: 'absent'
+  register: demo_project_del
+  tags:
+    - quick_val_delete
+
+- name: Stat template files for clean up
+  stat: path="{{ item }}"
+  register: clean_up
+  with_items:
+    - "{{ quick_val_heat_template_dest }}"
+    - "{{ vio_cluster_spec_dest }}"
+  tags:
+    - quick_val_delete
+
+- name: Clean up created files
+  file:
+    path: "{{ item }}"
+    state: 'absent'
+  when: item.state.exists
+  with_items:
+    - "{{ clean_up.results }}"
   tags:
     - quick_val_delete
 
@@ -378,18 +442,3 @@
     state: 'absent'
   tags:
     - unregister_vio_extentions
-
-- name: Stat template files for clean up
-  stat: path="{{ item }}"
-  register: clean_up
-  with_items:
-    - "{{ quick_val_heat_template_dest }}"
-    - "{{ vio_cluster_spec_dest }}"
-
-- name: Clean up created files
-  file:
-    path: "{{ item }}"
-    state: 'absent'
-  when: item.state.exists
-  with_items:
-    - "{{ clean_up.results }}"
