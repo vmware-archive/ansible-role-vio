@@ -367,7 +367,7 @@
     heat_stack_name: "{{ heat_stack_name }}"
   register: check_heat_del
   tags:
-    - quick_val
+    - quick_val_delete
 
 - name: Delete Heat Stack
   os_heat_status:
