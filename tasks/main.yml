@@ -341,7 +341,6 @@
   tags:
     - quick_val
 
-## dpeloy stack in new project
 - name: Heat Stack
   uri:
     url: "https://{{ vio_loadbalancer_vip }}:8004/v1/{{ demo_project.project_id }}/stacks"
@@ -360,24 +359,12 @@
   tags:
     - quick_val
 
-- name: Check Heat stack
-  os_check_heat:
-    auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
-    username: "{{ authuser }}"
-    password: "{{ authpass }}"
-    tenant_name: "admin"
-    heat_stack_name: "{{ heat_stack_name }}"
-  register: check_heat_del
-  tags:
-    - quick_val_delete
-
 - name: Delete Heat Stack
   os_heat_status:
     auth_url: "https://{{ vio_loadbalancer_vip }}:5000/v2.0"
     username: "{{ demo_username }}"
     password: "{{ demo_user_password }}"
     project_name: "{{ demo_project_name }}"
-  when: check_heat_del.present
   tags:
     - quick_val_delete
 
@@ -426,21 +413,10 @@
 
 - name: Clean up created files
   file:
-    path: "{{ item }}"
+    path: "{{ item.stat.path }}"
     state: 'absent'
   when: item.stat.exists
   with_items:
     - "{{ clean_up.results }}"
   tags:
     - quick_val_delete
-
-- name: Unregister VIO Extentions
-  vio_unregister_extension:
-    hostname: "{{ vio_oms_vcenter_hostname }}"
-    username: "{{ vio_oms_vcenter_username }}"
-    password: "{{ vio_oms_vcenter_pwd }}"
-    validate_certs: "{{ vcenter_validate_certs }}"
-    extention_type: 'vio'
-    state: 'absent'
-  tags:
-    - unregister_vio_extentions
