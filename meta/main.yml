@@ -14,7 +14,7 @@ galaxy_info:
   # - GPLv3
   # - Apache
   # - CC-BY
-  license: license (Apache)
+  license: GPLv3
 
   min_ansible_version: 2.2.1
 
@@ -217,9 +217,6 @@ galaxy_info:
     # alphanumeric characters. Maximum 20 tags per role.
 
 dependencies:
-  - ovftool
-  - vsphere environment for VIO
-  - NSX environemnt for VIO
   # List your role dependencies here, one per line.
   # Be sure to remove the '[]' above if you add dependencies
   # to this list.
