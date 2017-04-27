@@ -13,45 +13,32 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-chaperone_log_dir: "/tmp"
-vio_cluster_spec: "/tmp/vio_cluster_spec.json"
-
-vio_ova_location: "/var/www/html/downloads"
-vio_ova: "VMware-OpenStack-2.0.0.0-3302254_OVF10.ova"
-
-### default image for demo project
-default_image_name: "ubuntu-14.04-server-amd64"
-
-##### this is where the UI installs the ovftool this by default
-ovftool: /usr/local/bin/ovftool/ovftool
-
-##### vio upgrade vars
-vio_patch: "vio-patch-201_2.0.1.3309787_all.deb"
-vip_dest_path: "/tmp"
-vio_oms_user: 'viouser'
-vio_oms_grp: 'viogrp'
-vio_patch_version: '2.0.1.3309787'
-
-### templates
-dest_dir: "/tmp"
+---
+### VIO Cluster Specification template
 templates_dir: "../templates"
-vio_heat_template_src: "{{ templates_dir }}/vio_heat.json.j2"
-vio_heat_template_dest: "{{ dest_dir }}/vio_heat.json"
+destination_dir: "/tmp"
+vio_cluster_spec: "vio_cluster_spec_3_0.json.j2"
+vio_cluster_spec_src: "{{ templates_dir }}/{{ vio_cluster_spec }}"
+vio_cluster_spec_dest: "{{ destination_dir }}/vio_cluster_spec.json"
 
-### IP addrs to validate
-vio_ip_addrs:
+vio_cluster_spec_singlevm: "vio_cluster_spec_3_0_singlevm.json.j2"
+vio_cluster_spec_singlevm_src: "{{ templates_dir }}/{{ vio_cluster_spec_singlevm }}"
+vio_cluster_spec_singlevm_dest: "{{ destination_dir }}/vio_cluster_spec_singlevm.json"
+
+quick_val_heat_template: "quick_val.json.j2"
+quick_val_heat_template_src: "{{ templates_dir }}/{{ quick_val_heat_template }}"
+quick_val_heat_template_dest: "{{ destination_dir }}/quick_val_heat_template.json"
+
+ovf_tool_path: /usr/local/bin/ovftool
+vcenter_validate_certs: False
+
+vio_ova_path: "/var/www/html/downloads"
+vio_ova: "VMware-OpenStack-3.0.0.0-4345506_OVF10.ova"
+oms_disk_mode: 'thin'
+oms_dns_list:
   - "{{ dns_server }}"
-  - "{{ syslog_server }}"
-  - "{{ vio_management_openstack_api_network_subnet }}"
-  - "{{ vio_management_openstack_api_network_ip_end }}"
-  - "{{ vio_management_openstack_api_network_ip_start }}"
-  - "{{ vio_management_openstack_api_network_gateway }}"
-  - "{{ vio_management_network_subnet }}"
-  - "{{ vio_management_network_ip_end }}"
-  - "{{ vio_management_network_ip_start }}"
-  - "{{ vio_management_network_gateway }}"
-  - "{{ vio_loadbalancer_vip }}"
-  - "{{ vio_val_ext_net_gateway }}"
-  - "{{ vio_val_ext_net_cidr }}"
-  - "{{ vio_val_ext_net_pool_start }}"
-  - "{{ vio_val_ext_net_pool_end }}"
+  - "{{ vio_oms_dns_server }}"
+vio_mgmt_node_datastores:
+  - "{{ vio_mgmt_node_ds_01 }}"
+  - "{{ vio_mgmt_node_ds_02 }}"
+  - "{{ vio_mgmt_node_ds_03 }}"

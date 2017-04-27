@@ -1,0 +1,120 @@
+{
+  "name" : "{{ vio_cluster_name }}",
+  "nodeGroups" : [ {
+    "name" : "LoadBalancer",
+    "roles" : [ "LoadBalancer" ],
+    "instanceNum" : 2,
+    "cpuNum" : 2,
+    "memCapacityMB" : 4096,
+    "swapRatio" : 1.0,
+    "haFlag" : "on",
+    "attributes" : {
+      "public_vip" : "{{ vio_loadbalancer_vip | ipaddr }}",
+      "public_hostname" : "{{ vio_loadbalancer_hostname }}"
+    }
+  }, {
+    "name" : "Controller",
+    "roles" : [ "Controller", "MemoryCache", "ObjectStorage" ],
+    "instanceNum" : 2,
+    "cpuNum" : 8,
+    "memCapacityMB" : 16384,
+    "swapRatio" : 1.0,
+    "haFlag" : "on",
+    "attributes" : {
+      "vcenter_user" : "{{ vio_oms_vcenter_username }}",
+      "syslog_server" : "{{ syslog_server | ipaddr }}",
+      "token_expiration_time" : "7200",
+      "nsxv_vdn_scope_moref" : "{{ item.vdnscopeid }}",
+      "vcenter_password" : "{{ vio_oms_vcenter_pwd }}",
+      "nsxv_dvs_moref" : "{{ item.vdsmoid }}",
+      "nsxv_dvs_name" : "{{ vio_nsx_vds }}",
+      "syslog_server_protocol" : "{{ vio_oms_syslog_protocol }}",
+      "cinder_folder" : "Volumes",
+      "nsxv_external_network_moref" : "{{ vio_nsx_external_network }}",
+      "vcenter_insecure" : "true",
+      "syslog_server_tag" : "{{ vio_cluster_name }}",
+      "admin_password" : "{{ vio_authentication_keystone_password }}",
+      "glance_datastores" : "{{ vio_oms_datacenter_name }}:{{ vio_glance_datastore }}:100",
+      "nsxv_edge_cluster_moref" : "{{ item.edgeid }}",
+      "nsxv_username" : "{{ vio_nsx_manager_username }}",
+      "neutron_backend" : "nsxv",
+      "keystone_backend" : "sql",
+      "vcenter_ip" : "{{ vio_oms_vcenter_hostname }}",
+      "syslog_server_port" : "514",
+      "nsxv_exclusive_router_appliance_size" : "compact",
+      "glance_folder" : "/images",
+      "nsxv_manager" : "{{ vio_nsx_manager_ip }}",
+      "admin_user" : "{{ vio_authentication_keystone_username }}",
+      "nsxv_edge_cluster_name" : "{{ vio_nsx_edge_cluster }}",
+      "nsxv_edge_ha" : "False",
+      "admin_tenant_name" : "admin",
+      "nsxv_password" : "{{ vio_nsx_manager_password }}"
+    }
+  }, {
+    "name" : "DB",
+    "roles" : [ "Database", "MessageQueue" ],
+    "instanceNum" : 3,
+    "cpuNum" : 4,
+    "memCapacityMB" : 16384,
+    "swapRatio" : 1.0,
+    "haFlag" : "on"
+  }, {
+    "name" : "ComputeDriver",
+    "roles" : [ "Compute" ],
+    "instanceNum" : 1,
+    "cpuNum" : 2,
+    "memCapacityMB" : 4096,
+    "swapRatio" : 1.0,
+    "haFlag" : "on",
+    "attributes" : {
+      "region_name" : "nova"
+    },
+    "nodeAttributes" : [ {
+      "cluster_name" : "{{ vio_nova_cluster }}",
+      "datastore_regex" : "{{ vio_nova_datastore }}",
+      "cluster_moid" : "{{ item.computeid }}"
+    } ]
+  } ],
+  "vcClusters" : [ {
+    "name" : "{{ vio_management_cluster }}",
+    "moid" : "{{ item.managementid }}"
+  } ],
+  "networkConfig" : {
+    "METADATA_NETWORK" : [ "{{ vio_management_network_portgroup }}" ],
+    "DATA_NETWORK" : [ "{{ vio_management_network_portgroup }}" ],
+    "MGT_NETWORK" : [ "{{ vio_management_network_portgroup }}" ],
+    "REPL_NETWORK" : [ "{{ vio_management_network_portgroup }}" ],
+    "EXTERNAL_NETWORK" : [ "{{ vio_management_openstack_api_network_portgroup }}" ]
+  },
+  "networkings" : [ {
+    "name" : "{{ vio_management_openstack_api_network_portgroup }}",
+    "portGroup" : "{{ vio_management_openstack_api_network_portgroup }}",
+    "isDhcp" : false,
+    "type" : "static",
+    "dns1" : "{{ dns_server | ipaddr }}",
+    "ipBlocks" : [ {
+      "beginIp" : "{{ vio_management_openstack_api_network_ip_start | ipaddr }}",
+      "endIp" : "{{ vio_management_openstack_api_network_ip_end | ipaddr }}"
+    } ],
+    "gateway" : "{{ vio_management_openstack_api_network_gateway | ipaddr }}",
+    "netmask" : "{{ vio_management_openstack_api_network_subnet | ipaddr }}",
+    "dnsList" : [ "{{ dns_server | ipaddr }}" ]
+  }, {
+    "name" : "{{ vio_management_network_portgroup }}",
+    "portGroup" : "{{ vio_management_network_portgroup }}",
+    "isDhcp" : false,
+    "type" : "static",
+    "dns1" : "{{ dns_server | ipaddr }}",
+    "ipBlocks" : [ {
+      "beginIp" : "{{ vio_management_network_ip_start | ipaddr }}",
+      "endIp" : "{{ vio_management_network_ip_end | ipaddr }}"
+    } ],
+    "gateway" : "{{ vio_management_network_gateway | ipaddr }}",
+    "netmask" : "{{ vio_management_network_subnet | ipaddr }}",
+    "dnsList" : [ "{{ dns_server | ipaddr }}" ]
+  } ],
+  "specFile" : true,
+  "attributes" : {
+    "plan" : ""
+  }
+}
