@@ -1,3 +1,6 @@
+# Copyright 2015 VMware, Inc.  All rights reserved.
+# SPDX-License-Identifier: Apache-2.0 OR GPL-3.0-only
+---
 galaxy_info:
   author: VMware
   description: Deploy VIO
@@ -14,7 +17,7 @@ galaxy_info:
   # - GPLv3
   # - Apache
   # - CC-BY
-  license: GPLv3
+  license: "license ( Apache, GPLv3 )"
 
   min_ansible_version: 2.2.1
 
